@@ -1,3 +1,5 @@
+// To compile: `g++ ex1.cpp -o ex1.out -lcryptopp -lstdc++fs`
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -5,18 +7,10 @@
 #include <experimental/filesystem>
 #include "cryptopp/modes.h"
 #include "cryptopp/aes.h"
-#include "cryptopp/sha.h"
-#include "cryptopp/filters.h"
 #include <cryptopp/files.h>
-#include "cryptopp/rsa.h"
 #include "cryptopp/osrng.h"
-#include "cryptopp/ecp.h"
-#include "cryptopp/asn.h"
-#include "cryptopp/oids.h"
 #include "cryptopp/base64.h"
 #include "cryptopp/hex.h"
-
-#define _DEBUG
 
 using namespace std;
 namespace filesys = experimental::filesystem;

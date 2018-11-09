@@ -35,8 +35,10 @@
 .vscode
 
 # Test folder
-/test
+/Exercice 1/test
 
 # Pirate txt
 pirate.txt
+
+# Encrypted file
 *.enc
