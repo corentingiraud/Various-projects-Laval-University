@@ -8,6 +8,13 @@ For ubuntu, you have to install the following packages:
 To compile:
 `g++ ex2.cpp -o ex2.out -lcryptopp`
 
+## Wallet file
+
+The wallet file name is : `password-wallet.enc`.
+
+The wallet format is:
+`<hexEncode(CTR_IV)>$<hexEncode(AES_CTR(service))>:<hexEncode(CTR_IV)>$<hexEncode(AES_CTR(url))>:<hexEncode(CTR_IV)>$<hexEncode(AES_CTR(username))>:<hexEncode(CTR_IV)>$<hexEncode(AES_CTR(password))>`
+
 ## Examples
 
 - `./ex2 -a 123pwd -srv facebook -url www.facebook.com -user alice@gmail.com -pwd 12t3r`: secure the wallet with 123pwd secret. Add facebook service (url: www.facebook.com) with username: alice@gmail.com and pwd: 12t3r
