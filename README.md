@@ -6,9 +6,9 @@ Various source code of different projects that I developed during my exchange pr
 
 - Autumn session
     - Cryptography
-        - [Various cipher mode](automn-session/cryptography/tp1/ex2/README.md) (ECB, CBC, CFB, OFB and CTR)
-        - [Simple ransomware](automn-session/cryptography/tp2/ex1/README.md) Using C++, Crypto++
-        - [Simple secure password wallet](automn-session/cryptography/tp2/ex2/README.md) Using C++, Crypto++
-        - [Shamir Secret Sharing](automn-session/cryptography/tp2/ex3/README.md)
+        - [Various cipher mode](automn-session/cryptography/tp1/ex2) (ECB, CBC, CFB, OFB and CTR)
+        - [Simple ransomware](automn-session/cryptography/tp2/ex1) Using C++, Crypto++
+        - [Simple secure password wallet](automn-session/cryptography/tp2/ex2/) Using C++, Crypto++
+        - [Shamir Secret Sharing](automn-session/cryptography/tp2/ex3/)
     - Network security
         - TODO
