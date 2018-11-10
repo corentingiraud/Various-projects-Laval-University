@@ -2,7 +2,9 @@
 
 A very simple c++ program to save passwords in a file in a secure way using AES 128 CTR mode.
 
-For ubuntu, you have to install the following packages:
+**This program uses CryptoPP library.**
+
+For example, in ubuntu you have to install the following packages to install CryptoPP lib:
 `sudo apt-get install libcrypto++-dev libcrypto++-doc libcrypto++-utils --fix-missing`
 
 To compile:

@@ -5,7 +5,9 @@
 A very simple c++ program to crypt an entire directory using [Crypto++](https://www.cryptopp.com/).
 After encryption, a file called `pirate.txt` is created in the directory you want to crypt. It contains the Key and IV used to crypt every file using AES 128 with CBC mode. Of course these information need to be send to the pirate in a real ransomware.
 
-For ubuntu, you have to install the following packages:
+**This program uses CryptoPP library.**
+
+For example, in ubuntu you have to install the following packages to install CryptoPP lib:
 `sudo apt-get install libcrypto++-dev libcrypto++-doc libcrypto++-utils --fix-missing`
 
 To compile the project:

@@ -1,3 +1,5 @@
+// To compile: `g++ ex2.cpp -o ex2.out -lcryptopp`
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -17,24 +19,28 @@ using namespace CryptoPP;
 byte KEY[Weak::MD5::DIGESTSIZE];
 string PASSWORD_WALLET_PATH = "password-wallet.enc";
 
+/*
+ * Compute MD5 Hash using CryptoPP library.
+ *
+ * Arguments
+ * 	globalPassword: main secret
+ *  digest: pointer to the digest
+ */
 void computeKey(string globalPassword, byte *digest)
 {
     Weak::MD5 hash;
     hash.CalculateDigest(digest, (const byte *)globalPassword.c_str(), globalPassword.length());
 }
 
-void displayBytes(byte *b)
-{
-    HexEncoder encoder;
-    string output;
-
-    encoder.Attach(new StringSink(output));
-    encoder.Put(b, sizeof(b));
-    encoder.MessageEnd();
-
-    cout << output << endl;
-}
-
+/*
+ * Encode string using HEXencoder from CryptoPP lib
+ *
+ * Arguments
+ * 	text: text to encode
+ * 
+ * Returns
+ *  encoded: a string representing hexEncode(text)
+ */
 string hexEncode(string text)
 {
     string encoded;
@@ -44,6 +50,15 @@ string hexEncode(string text)
     return encoded;
 }
 
+/*
+ * Decode string using HEXdecoder from CryptoPP lib
+ *
+ * Arguments
+ * 	text: text to decode
+ * 
+ * Returns
+ *  decode: a string representing hexDecode(text)
+ */
 string hexDecode(string text)
 {
     string decoded;
@@ -53,6 +68,16 @@ string hexDecode(string text)
     return decoded;
 }
 
+/*
+ * Crypt and encode a string using AES 128 CTR mode and HEXencoder
+ *
+ * Arguments
+ * 	plainText: text to crypt and encode
+ * 
+ * Returns
+ *  A string representing <hexEncode(IV_CTR)>$<hexEncode(Cipher)>.
+ *  "$" character is used as a delimiter
+ */
 string cryptAndEncode(string plainText)
 {
     byte ctr[AES::BLOCKSIZE];
@@ -71,6 +96,18 @@ string cryptAndEncode(string plainText)
     return hexEncode(ctrString) + "$" + hexEncode(cipher);
 }
 
+/*
+ * Decrypt and decode a string using AES 128 CTR mode and HEXdecoder.
+ * First, the function will parse the text and isolate IV_CTR & cipher.
+ * Then, it will initialize the decoder and decrytor.
+ * Finally, it will decode then decrypt the cipher text. 
+ *
+ * Arguments
+ * 	text: text to decrypt and decode
+ * 
+ * Returns
+ *  A string representing the decoded and decrypted value.
+ */
 string decodeAndDecrypt(string text)
 {
     // Split CTR and encodedCipherText
@@ -83,14 +120,14 @@ string decodeAndDecrypt(string text)
     // Decode encodedCipherText
     string cipherText;
     StringSource s1(encodedCipherText, true,
-                     new HexDecoder(
-                         new StringSink(cipherText)));
+                    new HexDecoder(
+                        new StringSink(cipherText)));
 
     // Decode and create CTR
     string ctrString;
     StringSource s2(encodedCTR, true,
-                     new HexDecoder(
-                         new StringSink(ctrString)));
+                    new HexDecoder(
+                        new StringSink(ctrString)));
     byte ctr[AES::BLOCKSIZE];
     for (int i = 0; i < AES::BLOCKSIZE; i++)
     {
@@ -102,12 +139,28 @@ string decodeAndDecrypt(string text)
     d.SetKeyWithIV(KEY, sizeof(KEY), ctr);
     string decrypted;
     StringSource s3(cipherText, true,
-                     new StreamTransformationFilter(d,
-                                                    new StringSink(decrypted)));
+                    new StreamTransformationFilter(d,
+                                                   new StringSink(decrypted)));
 
     return decrypted;
 }
 
+/*
+ * Add service to the wallet file.
+ * It will use the following format:
+ *  `<hexEncode(CTR_IV)>$<hexEncode(AES_CTR(service))>:
+ *  <hexEncode(CTR_IV)>$<hexEncode(AES_CTR(url))>:
+ *  <hexEncode(CTR_IV)>$<hexEncode(AES_CTR(username))>:
+ *  <hexEncode(CTR_IV)>$<hexEncode(AES_CTR(password))>`
+ * Each line represents a service.
+ * ":" character is used as a delimiter
+ *
+ * Arguments
+ * 	text: text to decrypt and decode
+ * 
+ * Returns
+ *  A string representing the decoded and decrypted value.
+ */
 void addService(string service, string url, string name, string pwd)
 {
     fstream file;
@@ -117,7 +170,16 @@ void addService(string service, string url, string name, string pwd)
     file.close();
 }
 
-void displayLine(string line, int lineIndex, bool displayUser, bool displayPwd)
+/*
+ * Display a service in column.
+ *
+ * Arguments
+ * 	line: the line representing a service
+ *  lineIndex: a number representing the service index in the wallet file
+ *  displayUser: a bool to indicate if the function will display the username
+ *  displayPwd: a bool to indicate if the function will display the password
+ */
+void displayService(string line, int lineIndex, bool displayUser, bool displayPwd)
 {
     string delimiter = ":";
     size_t pos = 0;
@@ -142,6 +204,9 @@ void displayLine(string line, int lineIndex, bool displayUser, bool displayPwd)
          << endl;
 }
 
+/*
+ * Display header in column.
+ */
 void displayHeader()
 {
     cout << setw(10) << left << "ligne"
@@ -151,7 +216,9 @@ void displayHeader()
          << setw(30) << left << "pwd"
          << endl;
 }
-
+/*
+ * Display every service in wallet file
+ */
 void listService()
 {
     displayHeader();
@@ -161,12 +228,21 @@ void listService()
     int lineIndex = 1;
     while (getline(ifs, line))
     {
-        displayLine(line, lineIndex, false, false);
+        displayService(line, lineIndex, false, false);
         lineIndex++;
     }
 }
 
-string getLineByIndex(int index)
+/*
+ * Get a specific line in the wallet file
+ *  
+ * Arguments:
+ *  index: a number representing the line index in the wallet file
+ * 
+ * Returns:
+ *  A string of the asked line
+ */
+string getServiceByIndex(int index)
 {
     ifstream ifs(PASSWORD_WALLET_PATH);
     std::string line;
@@ -231,9 +307,9 @@ int main(int argc, char *argv[])
         int index;
         bool displayUser = false;
         bool displayPwd = false;
-        for(int i = 3; i < argc; i++)
+        for (int i = 3; i < argc; i++)
         {
-            string arg = argv[i];            
+            string arg = argv[i];
             if (arg == "-i")
             {
                 index = atoi(argv[i + 1]);
@@ -249,7 +325,7 @@ int main(int argc, char *argv[])
             }
         }
         displayHeader();
-        displayLine(getLineByIndex(index), index, displayUser, displayPwd);
+        displayService(getServiceByIndex(index), index, displayUser, displayPwd);
     }
     return 0;
 }

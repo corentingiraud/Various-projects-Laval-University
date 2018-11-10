@@ -1,4 +1,4 @@
-// To compile: `g++ ex1.cpp -o ex1.out -lcryptopp -lstdc++fs`
+// /!\ To compile: `g++ ex1.cpp -o ex1.out -lcryptopp -lstdc++fs` /!\ 
 
 #include <string>
 #include <vector>

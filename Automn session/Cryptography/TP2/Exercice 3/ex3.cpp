@@ -1,5 +1,5 @@
-// To compile:
-// To execute: Be carefull with parenthesis characters. You have to scape them using " or \.
+// To compile: g++ ex3.cpp -o ex3.out -lcryptopp
+// To execute: Be carefull with parenthesis characters. You have to escape them using " or \.
 
 #include <string>
 #include <vector>
@@ -11,6 +11,20 @@
 using namespace std;
 using namespace CryptoPP;
 
+/*
+ * Generate (k - 1) random polynomial coefficients from 0 to q.
+ * The first coefficient is s (shamir secret).
+ * This function use Integer class from cryptopp lib.
+ * More information: https://www.cryptopp.com/docs/ref/class_integer.html
+ *
+ * Arguments
+ * 	k: number of coefficient to generate
+ *  s: shamir secret, it will be the first coefficient
+ *  q: modulo value
+ *
+ * Returns:
+ * 	vector containing coefficients
+ */
 vector<long> generateRandomCoefPoly(long k, long s, long q)
 {
     vector<long> a;
@@ -25,6 +39,18 @@ vector<long> generateRandomCoefPoly(long k, long s, long q)
     return a;
 }
 
+/*
+ * Generate n points (x,f(x)) where f is a polynom.
+ * f coefficient is aCoefs.
+ * 
+ * Arguments
+ * 	aCoefs: coefficients vector
+ *  n: number of point to generate
+ *  q: modulo value
+ *
+ * Returns:
+ * 	vector containing vectors of coordinates x, y representing a generated point
+ */
 vector<vector<long>> generatePoints(vector<long> aCoefs, long n, long q)
 {
     vector<vector<long>> points;
@@ -44,6 +70,16 @@ vector<vector<long>> generatePoints(vector<long> aCoefs, long n, long q)
     return points;
 }
 
+/*
+ * Compute (brute force) a modular inverse
+ * 
+ * Arguments
+ * 	a: the number to inverse
+ *  q: modulo value
+ *
+ * Returns:
+ * 	a-1 (in Zq)
+ */
 long modInverse(long a, long q)
 {
     a = a % q;
@@ -52,16 +88,26 @@ long modInverse(long a, long q)
             return x;
 }
 
+/*
+ * Find shamir secret using points and modulo value
+ * 
+ * Arguments
+ *  points: Every point
+ *  q: modulo value
+ *
+ * Returns:
+ * 	the shamir secret
+ */
 long findSecret(vector<vector<long>> points, long q)
 {
-    long s = 0;
-    int i = 0;
+    long s = 0; // Shamir secret
+    int i = 0;  // First index
     for (const auto &point : points)
     {
         // Compute Ii(0) of current point
-        long num = 1;
-        long denom = 1;
-        int j = 0;
+        long num = 1;   // Numerator
+        long denom = 1; // Denominator
+        int j = 0;      // Second index
         for (const auto &pointI : points)
         {
             if (i != j)
@@ -91,6 +137,7 @@ int main(int argc, char *argv[])
 
     long k, n, s, q;
 
+    // ------------ Shamir generation
     if (string(argv[1]) == "-e")
     {
         for (int i = 2; i < argc; i++)
@@ -115,21 +162,25 @@ int main(int argc, char *argv[])
             }
             i++;
         }
+        // Generate random coefficients
         vector<long> aCoefs = generateRandomCoefPoly(k, s, q);
+
         // Display polynom
         cout << "Generated polynom: ";
         int index = 0;
         for (const auto &a : aCoefs)
         {
             cout << a << " * x^" << index;
-            if (index < k - 1)
+            if (index < k - 1) // Pretty print
                 cout << " + ";
             index++;
         }
         cout << endl;
 
+        // Generate n points
         vector<vector<long>> points = generatePoints(aCoefs, n, q);
         index = 1;
+
         // Display generated points
         cout << "Generated points: " << endl;
         for (const auto &i : points)
@@ -138,6 +189,8 @@ int main(int argc, char *argv[])
             index++;
         }
     }
+
+    // ------------ Shamir secret finding
     else if (string(argv[1]) == "-d")
     {
         vector<vector<long>> points;
@@ -163,6 +216,7 @@ int main(int argc, char *argv[])
             }
             i++;
         }
+        // Find the secret a display it
         long s = findSecret(points, q);
         cout << "Secret: " << s << endl;
     }
