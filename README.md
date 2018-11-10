@@ -2,15 +2,15 @@
 
 Various source code of different projects that I developed during my exchange program in Laval University.
 
-## Table of content
+## Table of contents
 
 - Autumn session
     - Cryptography
-        - [Various cipher mode](automn-session/cryptography/tp1/ex2) (ECB, CBC, CFB, OFB and CTR)
-        - [Simple ransomware](automn-session/cryptography/tp2/ex1) Using C++, Crypto++
-        - [Simple secure password wallet](automn-session/cryptography/tp2/ex2) Using C++, Crypto++
-        - [Shamir Secret Sharing](automn-session/cryptography/tp2/ex3)
+        - [Various block cipher mode of operation](automn-session/cryptography/tp1/ex2): including ECB, CBC, CFB, OFB and CTR. Pure C++ project.
+        - [Simple ransomware](automn-session/cryptography/tp2/ex1): using C++ and Crypto++ library
+        - [Simple secure password wallet](automn-session/cryptography/tp2/ex2): using C++ and Crypto++ library
+        - [Shamir's secret sharing](automn-session/cryptography/tp2/ex3): using C++ and Crypto++ library
     - Network security
-        - [Nmap quick guide](automn-session/network-security/tp2/professor-messer-nmap-guide.pdf)
+        - [Nmap quick guide](automn-session/network-security/tp2/professor-messer-nmap-guide.pdf): pdf summary of nmap tool
     - Python introduction
         - TODO
