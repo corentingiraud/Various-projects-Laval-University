@@ -33,7 +33,7 @@ vector<long> generateRandomCoefPoly(long k, long s, long q)
     Integer::RandomNumberType r;
     for (int i = 1; i < k; i++)
     {
-        Integer randomCoef = Integer(rng, 0, q, r);
+        Integer randomCoef = Integer(rng, 0, q);
         a.push_back(randomCoef.ConvertToLong());
     }
     return a;
@@ -86,6 +86,7 @@ long modInverse(long a, long q)
     for (long x = 1; x < q; x++)
         if ((a * x) % q == 1)
             return x;
+    return 0;
 }
 
 /*
