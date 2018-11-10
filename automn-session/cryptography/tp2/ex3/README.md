@@ -12,14 +12,16 @@ To compile:
 
 ## Examples
 
-- Generate 5 points for sharing the secret 7. 3 points are necessary to find the secret. All operations will be computed modulus 31.
+### Example 1
 
-Input:
+Generate 5 points for sharing the secret 7. 3 points are necessary to find the secret. All operations will be computed modulus 31.
+
+**Input:**
 ```
 ./ex3.out -e -kn \(3,5\) -s 7 -q 31
 ```
 
-Output (for example because every generation is unique):
+**Output (for example because every generation is unique):**
 ```
 Generated polynom: 7 * x^0 + 13 * x^1 + 31 * x^2
 Generated points: 
@@ -30,14 +32,16 @@ s4: (4,28)
 s5: (5,10)
 ```
 
-- Generate 4 points for sharing the secret 91. 3 points are necessary to find the secret. All operations will be computed modulus 127.
+### Example 2
 
-Input:
+Generate 4 points for sharing the secret 91. 3 points are necessary to find the secret. All operations will be computed modulus 127.
+
+**Input:**
 ```
 ./ex3.out -e -kn \(3,4\) -s 91 -q 127
 ```
 
-Output (for example because every generation is unique):
+**Output (for example because every generation is unique):**
 ```
 Generated polynom: 91 * x^0 + 68 * x^1 + 55 * x^2
 Generated points: 
@@ -47,26 +51,30 @@ s3: (3,28)
 s4: (4,100)
 ```
 
-- Find the secret using 3 points (option -p). All operations will be computed modulus 31.
+### Example 3
 
-Input:
+Find the secret using 3 points (option -p). All operations will be computed modulus 31.
+
+**Input:**
 ```
 ./ex3.out -d -p \(1,20\) -p \(2,2\) -p \(3,15\) -q 31
 ```
 
-Output:
+**Output:**
 ```
 Secret: 7
 ```
 
-- Find the secret using 3 points (option -p). All operations will be computed modulus 127.
+### Example 4
 
-Input:
+Find the secret using 3 points (option -p). All operations will be computed modulus 127.
+
+**Input:**
 ```
 ./ex3.out -d -p \(1,64\) -p \(2,10\) -p \(7,97\) -q 127
 ```
 
-Output:
+**Output:**
 ```
 Secret: 91
 ```
