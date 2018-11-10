@@ -99,7 +99,7 @@ vector<string> getAllFilesInDir(const string &dirPath)
  *  key: the key used to crypt
  *  iv: the IV used to crypt
  */
-string encryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
+void encryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
 {
     AES::Encryption aesEncryption(key, AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
@@ -118,7 +118,7 @@ string encryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
  *  key: the key used to crypt
  *  iv: the IV used to crypt
  */
-string decryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
+void decryptionAES(string pathIn, string pathOut, byte key[16], byte iv[16])
 {
     AES::Decryption aesDecryption(key, AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);

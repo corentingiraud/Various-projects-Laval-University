@@ -19,7 +19,7 @@ The wallet format is:
 
 ## Examples
 
-- `./ex2 -a 123pwd -srv facebook -url www.facebook.com -user alice@gmail.com -pwd 12t3r`: secure the wallet with 123pwd secret. Add facebook service (url: www.facebook.com) with username: alice@gmail.com and pwd: 12t3r
+- `./ex2.out -a 123pwd -srv facebook -url www.facebook.com -user alice@gmail.com -pwd 12t3r`: secure the wallet with 123pwd secret. Add facebook service (url: www.facebook.com) with username: alice@gmail.com and pwd: 12t3r
 - `./ex2.out -l 123pwd`: list all services in the secure wallet
 - `./ex2.out -d 123pwd -i 1 -user`: display a specific service indentified by its line index (-i option) and display only username
 - `./ex2.out -d 123pwd -i 1 -user -pwd`: display a specific service indentified by its line index (-i option) and display username and password
