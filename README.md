@@ -10,6 +10,7 @@ Various source code of different projects that I developed during my exchange pr
         - [Simple ransomware](automn-session/cryptography/tp2/ex1): using C++ and Crypto++ library
         - [Simple secure password wallet](automn-session/cryptography/tp2/ex2): using C++ and Crypto++ library
         - [Shamir's secret sharing](automn-session/cryptography/tp2/ex3): using C++ and Crypto++ library
+        - [OpenSSL practice](automn-session/cryptography/tp3)
     - Network security
         - [Nmap quick guide](automn-session/network-security/tp2/professor-messer-nmap-guide.pdf): pdf summary of nmap tool
     - Python introduction
