@@ -233,6 +233,15 @@ string md5AndEncode(string text)
     return output;
 }
 
+string generateRandom()
+{
+    AutoSeededRandomPool rng;
+    Integer rnd(rng, 13);
+    std::stringstream ss;
+    ss << rnd;
+    return ss.str().substr(0, ss.str().length() - 1);
+}
+
 // QUESTION 2.1: MOT DE PASSE
 
 void registerPassword()
@@ -251,7 +260,7 @@ void registerPassword()
     string password = message.substr(message.find(" ") + 1, message.length());
     if (username.empty() || password.empty() || message.find(" ") == string::npos)
     {
-        message = "400: Bad Request";
+        message = "400 Bad Request";
         message = display("E2", false, message);
         return;
     }
@@ -274,13 +283,14 @@ void authenticatePassword()
             break;
         }
     }
-    message = display("A1", true, generateSessionID() + message);
+    string sessionID = generateRandom();
+    message = display("A1", true, sessionID + " " + message);
+    message = message.substr(message.find(" ") + 1, message.length());
     string username = message.substr(0, message.find(" "));
     string password = message.substr(message.find(" ") + 1, message.length());
     if (username.empty() || password.empty() || message.find(" ") == string::npos)
     {
-        message = "400: Bad Request";
-        message = display("A2", false, message);
+        display("A2", false, "400 " + sessionID);
         return;
     }
     ifstream ifs(SERVER1_PATH);
@@ -291,18 +301,16 @@ void authenticatePassword()
     {
         users[line.substr(0, line.find(":"))] = line.substr(line.find(":") + 1, line.length());
     }
-
     if (users.find(username) != users.end())
     {
-        cout << users[username] << endl;
-        cout << md5AndEncode(password) << endl;
         if (users[username] == md5AndEncode(password))
         {
-            display("A2", false, "SessionID 200 SetCookie:Session=Ns");
+            string cookie = generateRandom();
+            display("A2", false, "200 " + sessionID + " SetCookie:Session=" + cookie);
             return;
         }
     }
-    display("A2", false, "SessionID 401");
+    display("A2", false, sessionID + " 401");
 }
 
 // QUESTION 2.2: HTTP-Digest
