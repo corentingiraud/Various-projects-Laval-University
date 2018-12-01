@@ -72,5 +72,5 @@ void PasswordServer::importDB()
   while (getline(ifs, line))
   {
     users[line.substr(0, line.find(":"))] = line.substr(line.find(":") + 1, line.length());
-  }  
+  }
 }

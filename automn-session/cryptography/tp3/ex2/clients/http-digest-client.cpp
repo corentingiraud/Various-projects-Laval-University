@@ -72,19 +72,18 @@ void HTTPDigestClient::authenticate()
   std::string sessionID = res.substr(res.find(" ") + 1, res.length());
 
   // Compute payload
-  CryptoPP::Weak::MD5 hash;
   std::string nc = generateRandom();
 
   // - Compute md5(username:password)
   byte hashUsernamePassword[ CryptoPP::Weak::MD5::DIGESTSIZE ];
   std::string usernamePassword = username + ":" + password;
-  hash.CalculateDigest(hashUsernamePassword, (const byte*)usernamePassword.c_str(), usernamePassword.length());
+  hash1.CalculateDigest(hashUsernamePassword, (const byte*)usernamePassword.c_str(), usernamePassword.length());
   std::string hashUsernamePasswordStr((char*)hashUsernamePassword, CryptoPP::Weak::MD5::DIGESTSIZE);
 
   // - Compute md5(httpVerb + URI)
   byte hashHttpVerbURI[ CryptoPP::Weak::MD5::DIGESTSIZE ];
   std::string httpVerbURI = httpVerb + ":" + URI;
-  hash.CalculateDigest(hashHttpVerbURI, (const byte*)httpVerbURI.c_str(), httpVerbURI.length());
+  hash1.CalculateDigest(hashHttpVerbURI, (const byte*)httpVerbURI.c_str(), httpVerbURI.length());
   std::string hashHttpVerbURIStr((char*)hashHttpVerbURI, CryptoPP::Weak::MD5::DIGESTSIZE);
 
   // - Compute final hash and encode it using base64

@@ -58,7 +58,6 @@ std::string HTTPDigestServer::authenticate(std::string payload)
   // Find user in users map
   if (users.find(username) != users.end())
   {
-    CryptoPP::Weak::MD5 hash;
 
     // Decode md5(username:password) using base64 decoder
     std::string hashUsernamePasswordStr;
@@ -68,7 +67,7 @@ std::string HTTPDigestServer::authenticate(std::string payload)
     // Compute md5(httpVerb:URI)
     byte hashHttpVerbURI[ CryptoPP::Weak::MD5::DIGESTSIZE ];
     std::string httpVerbURI = httpVerb + ":" + URI;
-    hash.CalculateDigest(hashHttpVerbURI, (const byte*)httpVerbURI.c_str(), httpVerbURI.length());
+    hash1.CalculateDigest(hashHttpVerbURI, (const byte*)httpVerbURI.c_str(), httpVerbURI.length());
     std::string hashHttpVerbURIStr((char*)hashHttpVerbURI, CryptoPP::Weak::MD5::DIGESTSIZE);
 
     // Compute final hash and encode it using base64

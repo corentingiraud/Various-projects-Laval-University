@@ -51,8 +51,7 @@ std::string Communication::md5AndEncode(std::string text)
 {
   byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
 
-  CryptoPP::Weak::MD5 hash;
-  hash.CalculateDigest(digest, (const byte *)text.c_str(), text.length());
+  hash1.CalculateDigest(digest, (const byte *)text.c_str(), text.length());
 
   CryptoPP::Base64Encoder encoder(NULL, false);
   std::string output;

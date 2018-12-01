@@ -13,6 +13,9 @@
 class Communication
 {
   protected:
+    CryptoPP::Weak::MD5 hash1;
+    CryptoPP::SHA1 hash2;
+
     virtual std::string display(std::string step, bool clientToServer, std::string message);
     virtual std::string askUser(std::string question);
     virtual std::string generateRandom();
