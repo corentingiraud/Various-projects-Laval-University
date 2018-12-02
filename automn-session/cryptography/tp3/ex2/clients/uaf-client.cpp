@@ -83,15 +83,6 @@ void UAFClient::registerToServer()
   publicKey.DEREncode(pubKeySink);
   pubKeySink.MessageEnd();
 
-  // TEST
-  std::string encodedPrivateKey;
-
-  CryptoPP::Base64Encoder privKeySink(new CryptoPP::StringSink(encodedPrivateKey), false);
-  privateKey.DEREncode(privKeySink);
-  privKeySink.MessageEnd();
-
-  std::cout << "Private key (base64)" << encodedPrivateKey << std::endl;
-
   // Send payload to server
   std::string payload = username + " " + encodedPublicKey;
   payload = display("E1", true, payload);
@@ -144,7 +135,7 @@ void UAFClient::transaction()
   }
   std::string command = askUser("Veuillez entrez votre command pour le server '" + DEFAULT_SERVER + "': ");
   std::string sessionID = generateRandom();
-  std::string payload = display("A1", true, sessionID + " " + command);
+  std::string payload = display("T1", true, sessionID + " " + command);
   std::string res = uafServer->preTransaction(payload);
   res = res.substr(res.find(" ") + 1, res.length()); // Remove sessionID
   std::string ns = res.substr(0, res.find(" "));     // Extract ns
@@ -161,7 +152,7 @@ void UAFClient::transaction()
       signature, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(signatureEncoded), false));
 
   payload = display("T3", true, sessionID + " " + signatureEncoded);
-  uafServer->authenticate(payload);
+  uafServer->transaction(payload);
 }
 
 void UAFClient::saveToWallet(std::string serverName, std::string username, CryptoPP::RSA::PrivateKey privateKey)

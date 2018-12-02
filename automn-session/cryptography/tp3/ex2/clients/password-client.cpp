@@ -72,8 +72,7 @@ void PasswordClient::authenticate()
   std::string code = res.substr(0, res.find(" ")); // Extract code
   if (code == "200")
   {
-    cookie = res.substr(res.find("=") + 1, res.length()); // Extract code
-    std::cout << cookie << std::endl;
+    cookie = res.substr(res.find("=") + 1, res.length()); // Extract code and save it
   }
 }
 
