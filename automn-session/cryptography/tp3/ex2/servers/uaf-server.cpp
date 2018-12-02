@@ -38,6 +38,14 @@ std::string UAFServer::preAuthenticate(std::string payload)
 std::string UAFServer::authenticate(std::string payload)
 {
   std::string sessionID = payload.substr(0, payload.find(" "));
+
+  // Test if currentUser is known
+  if (users.find(currentUsername) == users.end())
+  {
+    std::string payloadRes = display("A4", false, sessionID + " 401 Unauthorized");
+    return payloadRes;
+  }
+
   std::string signatureEncoded = payload.substr(payload.find(" ") + 1, payload.length());
 
   // Decode signature
@@ -70,7 +78,7 @@ std::string UAFServer::preTransaction(std::string payload)
   std::string sessionID = payload.substr(0, payload.find(" "));
   currentCommand = payload.substr(payload.find(" ") + 1, payload.length());
   nsTransaction = generateRandom();
-  std::string payloadResponse = display("T2", false, sessionID + " " + nsTransaction);
+  std::string payloadResponse = display("T2", false, sessionID + " " + currentCommand + " " + nsTransaction);
   return payloadResponse;
 }
 
@@ -88,7 +96,7 @@ std::string UAFServer::transaction(std::string payload)
   bool result = false;
   CryptoPP::RSASS<CryptoPP::PSSR, CryptoPP::SHA1>::Verifier verifier(users[currentUsername]);
   CryptoPP::StringSource ss2(
-      currentCommand + nsTransaction + signatureDecoded, true,
+      (currentCommand + nsTransaction) + signatureDecoded, true,
       new CryptoPP::SignatureVerificationFilter(
           verifier, new CryptoPP::ArraySink((byte *)&result, sizeof(result)),
           CryptoPP::SignatureVerificationFilter::PUT_RESULT |

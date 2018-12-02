@@ -31,9 +31,14 @@ void mainMenu()
     std::cout << "3. UAF" << std::endl;
     std::cout << "4. Quitter" << std::endl;
     std::cout << "Choix : ";
-    std::string line;
-    getline(std::cin, line);
-    std::istringstream ss(line);
+    std::string input;
+    getline(std::cin, input);
+    while (input.empty())
+    {
+      std::cout << "Chaine vide, ré-essayez: ";
+      getline(std::cin, input);
+    }
+    std::istringstream ss(input);
     ss >> menu;
     std::cout << std::endl;
     std::cout << std::endl;

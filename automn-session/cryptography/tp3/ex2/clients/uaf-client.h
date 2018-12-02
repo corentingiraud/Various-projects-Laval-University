@@ -24,6 +24,8 @@ class UAFClient: public Communication
         const std::string PERSISTENCE_PATH = "persistence/uaf.client.wallet";
         const std::string DEFAULT_SERVER = "Server 1";
         std::map<std::string, std::map<std::string, CryptoPP::RSA::PrivateKey>> wallet;
+        std::string sessionID;
+        std::string currentUsername;
 
         void registerToServer();
         void authenticate();
@@ -31,6 +33,7 @@ class UAFClient: public Communication
         void updateWallet();
         void computeKey();
         void displayWallet();
+        void removeSession();        
         void saveToWallet(std::string serverName, std::string username, CryptoPP::RSA::PrivateKey privateKey);
 };
  

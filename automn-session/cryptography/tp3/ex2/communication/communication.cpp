@@ -35,6 +35,11 @@ std::string Communication::askUser(std::string question)
   std::cout << question;
   std::string input;
   getline(std::cin, input);
+  while (input.empty())
+  {
+    std::cout << "Chaine vide, ré-essayez: ";
+    getline(std::cin, input);
+  }
   return input;
 }
 

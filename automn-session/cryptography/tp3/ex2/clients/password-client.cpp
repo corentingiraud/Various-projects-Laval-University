@@ -11,18 +11,24 @@ int PasswordClient::menu()
   do
   {
     std::cout << std::endl
-              << " --------- Protocole 'Mot de passe': Menu Client" << std::endl
-              << std::endl;
+              << " --------- Protocole 'Mot de passe': Menu Client" << std::endl;
+
+    if (cookie.empty())
+    {
+      std::cout << " --------- Non authentifié" << std::endl;
+    }
+    else
+    {
+      std::cout << " --------- Authentifié. Cookie: " << cookie << "." << std::endl;
+    }
     std::cout << "1. Enregistrer un nouveau compte" << std::endl;
     std::cout << "2. Authentification" << std::endl;
     std::cout << "3. Transaction (authentification nécéssaire)" << std::endl;
     std::cout << "4. Supprimer le cookie (authentification nécéssaire)" << std::endl;
     std::cout << "5. Menu précédent" << std::endl;
     std::cout << "6. Quitter" << std::endl;
-    std::cout << "Choix : ";
-    std::string line;
-    getline(std::cin, line);
-    std::istringstream ss(line);
+    std::string choice = askUser("Choix: ");
+    std::istringstream ss(choice);
     ss >> menu;
     std::cout << std::endl;
 
@@ -43,7 +49,7 @@ int PasswordClient::menu()
     case 4:
       removeCookie();
       break;
-    
+
     case 5:
       return 0; // No effect to main menu
       break;
@@ -69,7 +75,7 @@ void PasswordClient::authenticate()
   payload = display("A1", true, sessionID + " " + payload);
   std::string res = passwordServer->authenticate(payload);
   res = res.substr(res.find(" ") + 1, res.length()); // Remove sessionID
-  std::string code = res.substr(0, res.find(" ")); // Extract code
+  std::string code = res.substr(0, res.find(" "));   // Extract code
   if (code == "200")
   {
     cookie = res.substr(res.find("=") + 1, res.length()); // Extract code and save it
@@ -96,7 +102,7 @@ void PasswordClient::removeCookie()
     std::cout << "Aucun cookie défini." << std::endl;
     return;
   }
-  std::string res = askUser("Voules-vous vraiment supprimer le cookie (" + cookie + ") ? <y/n>: ");
+  std::string res = askUser("Voulez-vous vraiment supprimer le cookie (" + cookie + ") ? <y/n>: ");
   if (res == "y")
   {
     cookie = "";

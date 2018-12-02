@@ -17,10 +17,8 @@ int HTTPDigestClient::menu()
     std::cout << "2. Authentification" << std::endl;
     std::cout << "3. Menu précédent" << std::endl;
     std::cout << "4. Quitter" << std::endl;
-    std::cout << "Choix : ";
-    std::string line;
-    getline(std::cin, line);
-    std::istringstream ss(line);
+    std::string choice = askUser("Choix: ");
+    std::istringstream ss(choice);
     ss >> menu;
     std::cout << std::endl;
 

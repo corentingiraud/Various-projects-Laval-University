@@ -13,25 +13,44 @@ int UAFClient::menu()
     getline(std::cin, masterPassword);
     std::cout << std::endl;
     computeKey();
-    updateWallet();
+    try
+    {
+      updateWallet();
+    }
+    catch (...)
+    {
+      masterPassword = "";
+      std::cout << "Mauvais mot de passe maître pour décrypter les clés privées déjà enregistrées." << std::endl;
+      std::cout << "Si vous avez oublié votre mot de passe, vous pouvez supprimer le fichier '" << PERSISTENCE_PATH << "'" << std::endl;
+      std::cout << "De la sorte, vous ré-initialiserez le protocol UAF du programme mais vous perdrez vos comptes." << std::endl;      
+      return 0;
+    }
   }
 
   int menu;
   do
   {
     std::cout << std::endl
-              << " --------- Protocole 'UAF': Menu Client" << std::endl
-              << std::endl;
+              << " --------- Protocole 'UAF': Menu Client" << std::endl;
+    if (currentUsername.empty() || sessionID.empty())
+    {
+      std::cout << " --------- Non authentifié" << std::endl;
+    }
+    else
+    {
+      std::cout << " --------- Authentifié en tant que " << currentUsername;
+      std::cout << ". Session ID: " << sessionID << "." << std::endl;
+    }
+    std::cout << std::endl;
     std::cout << "1. Enregistrer un nouveau compte" << std::endl;
     std::cout << "2. Authentification" << std::endl;
-    std::cout << "3. Transaction" << std::endl;
-    std::cout << "4. Afficher le portefeuille de clé" << std::endl;
-    std::cout << "5. Menu précédent" << std::endl;
-    std::cout << "6. Quitter" << std::endl;
-    std::cout << "Choix : ";
-    std::string line;
-    getline(std::cin, line);
-    std::istringstream ss(line);
+    std::cout << "3. Transaction (authentification nécéssaire)" << std::endl;
+    std::cout << "4. Fermer la session (authentification nécéssaire)" << std::endl;
+    std::cout << "5. Afficher le portefeuille de clé" << std::endl;
+    std::cout << "6. Menu précédent" << std::endl;
+    std::cout << "7. Quitter" << std::endl;
+    std::string choice = askUser("Choix: ");
+    std::istringstream ss(choice);
     ss >> menu;
     std::cout << std::endl;
 
@@ -50,14 +69,18 @@ int UAFClient::menu()
       break;
 
     case 4:
-      displayWallet();
+      removeSession();
       break;
 
     case 5:
-      return 0; // No effect to main menu
+      displayWallet();
       break;
 
     case 6:
+      return 0; // No effect to main menu
+      break;
+
+    case 7:
       return 4; // Option 4 in main menu is exit
       break;
     }
@@ -104,11 +127,10 @@ void UAFClient::authenticate()
     std::cout << "Username introuvable dans le wallet du server '" << DEFAULT_SERVER << "'." << std::endl;
     return;
   }
-  std::string sessionID = generateRandom();
-  std::string payload = display("A1", true, sessionID + " " + username);
+  std::string sessionIDTmp = generateRandom();
+  std::string payload = display("A1", true, sessionIDTmp + " " + username);
   std::string res = uafServer->preAuthenticate(payload);
-  res = res.substr(res.find(" ") + 1, res.length()); // Remove sessionID
-  std::string ns = res.substr(0, res.find(" "));     // Extract ns
+  std::string ns = res.substr(res.find(" ") + 1, res.length()); // Extract ns
 
   // Sign ns
   std::string signature;
@@ -121,29 +143,37 @@ void UAFClient::authenticate()
   CryptoPP::StringSource ss2(
       signature, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(signatureEncoded), false));
 
-  payload = display("A3", true, sessionID + " " + signatureEncoded);
-  uafServer->authenticate(payload);
+  payload = display("A3", true, sessionIDTmp + " " + signatureEncoded);
+  res = uafServer->authenticate(payload);
+  if (res.find("200") != std::string::npos)
+  {
+    sessionID = sessionIDTmp;
+    currentUsername = username;
+    return;
+  }
+  sessionID = "";
+  currentUsername = "";
 }
 
 void UAFClient::transaction()
 {
-  std::string username = askUser("Veuillez entrez votre username: ");
-  if (wallet[DEFAULT_SERVER].find(username) == wallet[DEFAULT_SERVER].end())
+  if (sessionID.empty())
   {
-    std::cout << "Username introuvable dans le wallet du server '" << DEFAULT_SERVER << "'." << std::endl;
+    std::cout << "Authentification nécéssaire." << std::endl;
     return;
   }
   std::string command = askUser("Veuillez entrez votre command pour le server '" + DEFAULT_SERVER + "': ");
-  std::string sessionID = generateRandom();
   std::string payload = display("T1", true, sessionID + " " + command);
   std::string res = uafServer->preTransaction(payload);
-  res = res.substr(res.find(" ") + 1, res.length()); // Remove sessionID
-  std::string ns = res.substr(0, res.find(" "));     // Extract ns
+
+  // Extract ns
+  res = res.substr(res.find(" ") + 1, res.length());            // Remove SessionID
+  std::string ns = res.substr(res.find(" ") + 1, res.length()); // Extract ns
 
   // Sign ns
   std::string signature;
   CryptoPP::AutoSeededRandomPool rng;
-  CryptoPP::RSASS<CryptoPP::PSSR, CryptoPP::SHA1>::Signer signer(wallet[DEFAULT_SERVER][username]);
+  CryptoPP::RSASS<CryptoPP::PSSR, CryptoPP::SHA1>::Signer signer(wallet[DEFAULT_SERVER][currentUsername]);
   CryptoPP::StringSource ss1(command + ns, true, new CryptoPP::SignerFilter(rng, signer, new CryptoPP::StringSink(signature)));
 
   // Encode sign(ns) using base64
@@ -270,4 +300,22 @@ void UAFClient::updateWallet()
 void UAFClient::computeKey()
 {
   hash1.CalculateDigest(masterPasswordHash, (const byte *)masterPassword.c_str(), masterPassword.length());
+}
+
+void UAFClient::removeSession()
+{
+  if (sessionID.empty())
+  {
+    std::cout << "Authentification nécéssaire." << std::endl;
+    return;
+  }
+  std::string res = askUser("Voulez-vous vraiment supprimer la session ? <y/n>: ");
+  if (res == "y")
+  {
+    sessionID = "";
+    currentUsername = "";
+    std::cout << "Session supprimée." << std::endl;
+    return;
+  }
+  std::cout << "Session non supprimée." << std::endl;
 }
