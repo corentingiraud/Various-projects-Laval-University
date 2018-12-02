@@ -70,7 +70,6 @@ void PasswordClient::authenticate()
   std::string res = passwordServer->authenticate(payload);
   res = res.substr(res.find(" ") + 1, res.length()); // Remove sessionID
   std::string code = res.substr(0, res.find(" ")); // Extract code
-  std::cout << code << std::endl;
   if (code == "200")
   {
     cookie = res.substr(res.find("=") + 1, res.length()); // Extract code

@@ -1,3 +1,6 @@
+// To compile: `g++ main.cpp communication/*.cpp servers/*.cpp clients/*.cpp -o main.out -lcryptopp`
+// To execute: `./main.out`
+
 #include <string>
 #include <iostream>
 #include <limits>

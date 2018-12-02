@@ -7,61 +7,100 @@ UAFServer::UAFServer()
 
 std::string UAFServer::registration(std::string payload)
 {
-  // std::string payloadResponse;
-  // std::string username = payload.substr(0, payload.find(" "));
-  // std::string password = payload.substr(payload.find(" ") + 1, payload.length());
-  // if (username.empty() || password.empty() || payload.find(" ") == std::string::npos)
-  // {
-  //   payloadResponse = "400 Bad Request";
-  //   payloadResponse = display("E2", false, payloadResponse);
-  //   return payloadResponse;
-  // }
-  // std::fstream file;
-  // file.open(PERSISTENCE_PATH, std::ios_base::app);
-  // file << username << ":" << md5AndEncode(password) << std::endl;
-  // file.close();
-  // payloadResponse = "200";
-  // payloadResponse = display("E2", false, payloadResponse);
-  // importDB();
-  // return payloadResponse;
+  std::string payloadResponse;
+  std::string username = payload.substr(0, payload.find(" "));
+  std::string publicKey = payload.substr(payload.find(" ") + 1, payload.length());
+  if (username.empty() || publicKey.empty() || payload.find(" ") == std::string::npos)
+  {
+    payloadResponse = "400 Bad Request";
+    payloadResponse = display("E2", false, payloadResponse);
+    return payloadResponse;
+  }
+  std::fstream file;
+  file.open(PERSISTENCE_PATH, std::ios_base::app);
+  file << username << ":" << publicKey << std::endl;
+  file.close();
+  payloadResponse = "200";
+  payloadResponse = display("E2", false, payloadResponse);
+  importDB();
+  return payloadResponse;
+}
+std::string UAFServer::preAuthenticate(std::string payload)
+{
+  // Compute payload
+  std::string sessionID = payload.substr(0, payload.find(" "));
+  currentUsername = payload.substr(payload.find(" ") + 1, payload.length());
+  ns = generateRandom();
+  std::string payloadResponse = display("A2", false, sessionID + " " + ns);
+  return payloadResponse;
 }
 
 std::string UAFServer::authenticate(std::string payload)
 {
-  // std::string sessionID = payload.substr(0, payload.find(" "));
-  // payload = payload.substr(payload.find(" ") + 1, payload.length()); // Remove sessionID
-  // std::string username = payload.substr(0, payload.find(" "));
-  // std::string password = payload.substr(payload.find(" ") + 1, payload.length());
-  // if (username.empty() || password.empty() || payload.find(" ") == std::string::npos)
-  // {
-  //   std::string payloadRes = display("A2", false, "400 " + sessionID);
-  //   return payloadRes;
-  // }
-  // if (users.find(username) != users.end())
-  // {
-  //   if (users[username] == md5AndEncode(password))
-  //   {
-  //     std::string cookie = generateRandom();
-  //     cookies.push_back(cookie);
-  //     std::string payloadRes = display("A2", false, sessionID + " 200 SetCookie:Session=" + cookie);
-  //     return payloadRes;
-  //   }
-  // }
-  // std::string payloadRes = display("A2", false, sessionID + " 401");
-  // return payloadRes;
+  std::string sessionID = payload.substr(0, payload.find(" "));
+  std::string signatureEncoded = payload.substr(payload.find(" ") + 1, payload.length());
+
+  // Decode signature
+  std::string signatureDecoded;
+  CryptoPP::StringSource ss(
+      signatureEncoded, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(signatureDecoded)));
+
+  // Verify signature
+  bool result = false;
+  CryptoPP::RSASS<CryptoPP::PSSR, CryptoPP::SHA1>::Verifier verifier(users[currentUsername]);
+  CryptoPP::StringSource ss2(
+      ns + signatureDecoded, true,
+      new CryptoPP::SignatureVerificationFilter(
+          verifier, new CryptoPP::ArraySink((byte *)&result, sizeof(result)),
+          CryptoPP::SignatureVerificationFilter::PUT_RESULT |
+              CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END));
+
+  if (result == true)
+  {
+    std::string payloadRes = display("A4", false, sessionID + " 200");
+    return payloadRes;
+  }
+  std::string payloadRes = display("A4", false, sessionID + " 401 Unauthorized");
+  return payloadRes;
+}
+
+std::string UAFServer::preTransaction(std::string payload)
+{
+  // Compute payload
+  std::string sessionID = payload.substr(0, payload.find(" "));
+  currentCommand = payload.substr(payload.find(" ") + 1, payload.length());
+  nsTransaction = generateRandom();
+  std::string payloadResponse = display("T2", false, sessionID + " " + nsTransaction);
+  return payloadResponse;
 }
 
 std::string UAFServer::transaction(std::string payload)
 {
-  // std::string sessionID = payload.substr(0, payload.find(" "));
-  // std::string cookie = payload.substr(payload.find("=") + 1, payload.length()); // Extract cookie
-  // if (std::find(cookies.begin(), cookies.end(), cookie) != cookies.end())
-  // {
-  //   std::string payloadRes = display("T2", false, sessionID + " 200");
-  //   return payloadRes;
-  // }
-  // std::string payloadRes = display("T2", false, sessionID + " 401");
-  // return payloadRes;
+  std::string sessionID = payload.substr(0, payload.find(" "));
+  std::string signatureEncoded = payload.substr(payload.find(" ") + 1, payload.length());
+
+  // Decode signature
+  std::string signatureDecoded;
+  CryptoPP::StringSource ss(
+      signatureEncoded, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(signatureDecoded)));
+
+  // Verify signature
+  bool result = false;
+  CryptoPP::RSASS<CryptoPP::PSSR, CryptoPP::SHA1>::Verifier verifier(users[currentUsername]);
+  CryptoPP::StringSource ss2(
+      currentCommand + nsTransaction + signatureDecoded, true,
+      new CryptoPP::SignatureVerificationFilter(
+          verifier, new CryptoPP::ArraySink((byte *)&result, sizeof(result)),
+          CryptoPP::SignatureVerificationFilter::PUT_RESULT |
+              CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END));
+
+  if (result == true)
+  {
+    std::string payloadRes = display("T4", false, sessionID + " 200");
+    return payloadRes;
+  }
+  std::string payloadRes = display("T4", false, sessionID + " 401 Unauthorized");
+  return payloadRes;
 }
 
 void UAFServer::importDB()
@@ -71,6 +110,18 @@ void UAFServer::importDB()
 
   while (getline(ifs, line))
   {
-    users[line.substr(0, line.find(":"))] = line.substr(line.find(":") + 1, line.length());
-  }  
+    std::string encodedPublicKey = line.substr(line.find(":") + 1, line.length());
+
+    // Decode private key
+    std::string decodedPublicKey;
+    CryptoPP::StringSource s1(encodedPublicKey, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPublicKey)));
+
+    // Create public key
+    CryptoPP::StringSource ss(decodedPublicKey, true);
+    CryptoPP::RSA::PublicKey publicKey;
+    publicKey.Load(ss);
+
+    // Save user and public key
+    users[line.substr(0, line.find(":"))] = publicKey;
+  }
 }

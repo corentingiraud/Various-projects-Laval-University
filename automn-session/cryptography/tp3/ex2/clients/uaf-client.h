@@ -7,6 +7,7 @@
 #include <map>
 #include <cryptopp/modes.h>
 #include <cryptopp/rsa.h>
+#include <cryptopp/pssr.h>
 #include "../servers/uaf-server.h"
 #include "../communication/communication.h"
  
@@ -21,7 +22,8 @@ class UAFClient: public Communication
         std::string masterPassword;
         byte masterPasswordHash[ CryptoPP::Weak::MD5::DIGESTSIZE ];
         const std::string PERSISTENCE_PATH = "persistence/uaf.client.wallet";
-        std::map<std::string, std::map<std::string, std::string>> wallet;
+        const std::string DEFAULT_SERVER = "Server 1";
+        std::map<std::string, std::map<std::string, CryptoPP::RSA::PrivateKey>> wallet;
 
         void registerToServer();
         void authenticate();
@@ -29,6 +31,7 @@ class UAFClient: public Communication
         void updateWallet();
         void computeKey();
         void displayWallet();
+        void saveToWallet(std::string serverName, std::string username, CryptoPP::RSA::PrivateKey privateKey);
 };
  
 #endif
