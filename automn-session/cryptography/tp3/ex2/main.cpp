@@ -11,6 +11,7 @@
 #include "servers/uaf-server.h"
 #include "clients/uaf-client.h"
 
+// Client & server class instanciation
 PasswordServer passwordServer;
 PasswordClient passwordClient(passwordServer);
 HTTPDigestServer httpDigestServer;
@@ -18,6 +19,7 @@ HTTPDigestClient httpDigestClient(httpDigestServer);
 UAFServer uafServer;
 UAFClient uafClient(uafServer);
 
+// Display the main menu. Call client menu according to user choice.
 void mainMenu()
 {
   int menu;

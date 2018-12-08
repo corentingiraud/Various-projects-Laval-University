@@ -9,10 +9,15 @@ int UAFClient::menu()
 {
   if (masterPassword.empty())
   {
+    // Ask master password from user
     std::cout << "Avant d'utiliser ce protocole, veuillez saisir le mot de passe maître du portefeuille de clés: ";
     getline(std::cin, masterPassword);
     std::cout << std::endl;
+
+    // Compute hash(masterPassword)
     computeKey();
+
+    // Try to decrypt the wallet. If it fails, return to main menu
     try
     {
       updateWallet();
@@ -121,16 +126,23 @@ void UAFClient::registerToServer()
 
 void UAFClient::authenticate()
 {
+  // Get username form user and check if it exists in the wallet
   std::string username = askUser("Veuillez entrez votre username: ");
   if (wallet[DEFAULT_SERVER].find(username) == wallet[DEFAULT_SERVER].end())
   {
     std::cout << "Username introuvable dans le wallet du server '" << DEFAULT_SERVER << "'." << std::endl;
     return;
   }
+
+  // Generate temporary sessionID (it will become sessionID if the authentification is successful)
   std::string sessionIDTmp = generateRandom();
   std::string payload = display("A1", true, sessionIDTmp + " " + username);
+
+  // Send payload to server and get response
   std::string res = uafServer->preAuthenticate(payload);
-  std::string ns = res.substr(res.find(" ") + 1, res.length()); // Extract ns
+
+  // Extract ns
+  std::string ns = res.substr(res.find(" ") + 1, res.length()); 
 
   // Sign ns
   std::string signature;
@@ -143,14 +155,19 @@ void UAFClient::authenticate()
   CryptoPP::StringSource ss2(
       signature, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(signatureEncoded), false));
 
+  // Compute payload and send it to server
   payload = display("A3", true, sessionIDTmp + " " + signatureEncoded);
   res = uafServer->authenticate(payload);
+
+  // Check response code and save sessionID if successful
   if (res.find("200") != std::string::npos)
   {
     sessionID = sessionIDTmp;
     currentUsername = username;
     return;
   }
+
+  // Else remove sessionID
   sessionID = "";
   currentUsername = "";
 }
@@ -162,13 +179,17 @@ void UAFClient::transaction()
     std::cout << "Authentification nécéssaire." << std::endl;
     return;
   }
+
+  // Get credentials from user
   std::string command = askUser("Veuillez entrez votre command pour le server '" + DEFAULT_SERVER + "': ");
   std::string payload = display("T1", true, sessionID + " " + command);
+
+  // Send payload to server for pre transaction
   std::string res = uafServer->preTransaction(payload);
 
-  // Extract ns
-  res = res.substr(res.find(" ") + 1, res.length());            // Remove SessionID
-  std::string ns = res.substr(res.find(" ") + 1, res.length()); // Extract ns
+  // Remove SessionID & Extract ns
+  res = res.substr(res.find(" ") + 1, res.length());
+  std::string ns = res.substr(res.find(" ") + 1, res.length());
 
   // Sign ns
   std::string signature;
@@ -181,6 +202,7 @@ void UAFClient::transaction()
   CryptoPP::StringSource ss2(
       signature, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(signatureEncoded), false));
 
+  // Compute payload and send it to server
   payload = display("T3", true, sessionID + " " + signatureEncoded);
   uafServer->transaction(payload);
 }
@@ -224,10 +246,13 @@ void UAFClient::saveToWallet(std::string serverName, std::string username, Crypt
 
 void UAFClient::displayWallet()
 {
+  // Iterate through wallet and found every unique server identified by their name
   for (auto server : wallet)
   {
     std::cout << "Nom du serveur: " << server.first << std::endl
               << std::endl;
+    
+    // Iterate through server and found every unique user identified by their username    
     for (auto user : server.second)
     {
       std::cout << "   - Username: " << user.first << std::endl;
@@ -252,6 +277,7 @@ void UAFClient::updateWallet()
   while (getline(ifs, line))
   {
     // Parse line
+    // Format reminder: serverName + ":" + username + ":" + counterEncoded + "$" + privateKeyEncryptedEncodedWithAES
     delimiter = ":";
     size_t pos = line.find(delimiter);
     serverName = line.substr(0, pos);
@@ -269,7 +295,7 @@ void UAFClient::updateWallet()
     std::string cipherText;
     CryptoPP::StringSource s1(privateKeyEncoded, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(cipherText)));
 
-    // Decode and create CTR
+    // Decode and create counter (CTR)
     std::string ctrString;
     CryptoPP::StringSource s2(encodedCTR, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(ctrString)));
     byte ctr[CryptoPP::AES::BLOCKSIZE];
@@ -286,7 +312,7 @@ void UAFClient::updateWallet()
                               new CryptoPP::StreamTransformationFilter(d,
                                                                        new CryptoPP::StringSink(decryptedPrivateKey)));
 
-    // Create private key
+    // Create CryptoPP private key based on decryptedPrivateKey
     CryptoPP::StringSource ss(decryptedPrivateKey, true);
     CryptoPP::RSA::PrivateKey privateKey;
     privateKey.Load(ss);
@@ -299,6 +325,7 @@ void UAFClient::updateWallet()
 
 void UAFClient::computeKey()
 {
+  // Compute hash using hash1 (md5, defined in communication class)
   hash1.CalculateDigest(masterPasswordHash, (const byte *)masterPassword.c_str(), masterPassword.length());
 }
 

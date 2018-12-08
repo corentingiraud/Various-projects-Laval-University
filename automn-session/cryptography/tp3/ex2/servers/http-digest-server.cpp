@@ -8,6 +8,8 @@ HTTPDigestServer::HTTPDigestServer()
 std::string HTTPDigestServer::registration(std::string payload)
 {
   std::string payloadResponse;
+  
+  // Parse payload
   std::string username = payload.substr(0, payload.find(" "));
   std::string password = payload.substr(payload.find(" ") + 1, payload.length());
   if (username.empty() || password.empty() || payload.find(" ") == std::string::npos)
@@ -16,22 +18,29 @@ std::string HTTPDigestServer::registration(std::string payload)
     payloadResponse = display("E2", false, payloadResponse);
     return payloadResponse;
   }
+
+  // Save username and base64(md5(username:password)) into persitence file
   std::fstream file;
   file.open(PERSISTENCE_PATH, std::ios_base::app);
   file << username << ":" << md5AndEncode(username + ":" + password) << std::endl;
   file.close();
+  
+  // Update in memory database
+  importDB();
+
+  // Compute and send payload response
   payloadResponse = "200";
   payloadResponse = display("E2", false, payloadResponse);
-  importDB();
   return payloadResponse;
 }
 
 std::string HTTPDigestServer::preAuthenticate(std::string payload)
 {
+  // Parse payload
   httpVerb = payload.substr(0, payload.find(" "));
   URI = payload.substr(payload.find(" ") + 1, payload.length());
 
-  // Compute payload
+  // Compute payload response
   std::string ns = generateRandom();
   std::string sessionID = generateRandom();
   std::string payloadResponse = display("A2", false, "401 Unauthorized " + ns + " " + sessionID);

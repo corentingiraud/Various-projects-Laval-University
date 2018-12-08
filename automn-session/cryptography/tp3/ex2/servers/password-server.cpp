@@ -7,6 +7,7 @@ PasswordServer::PasswordServer()
 
 std::string PasswordServer::registration(std::string payload)
 {
+  // Parse payload
   std::string payloadResponse;
   std::string username = payload.substr(0, payload.find(" "));
   std::string password = payload.substr(payload.find(" ") + 1, payload.length());
@@ -16,18 +17,25 @@ std::string PasswordServer::registration(std::string payload)
     payloadResponse = display("E2", false, payloadResponse);
     return payloadResponse;
   }
+
+  // Save username and base64(md5(password)) into persitence file
   std::fstream file;
   file.open(PERSISTENCE_PATH, std::ios_base::app);
   file << username << ":" << md5AndEncode(password) << std::endl;
   file.close();
+
+  // Update users catalog
+  importDB();
+
+  // Send payload response
   payloadResponse = "200";
   payloadResponse = display("E2", false, payloadResponse);
-  importDB();
   return payloadResponse;
 }
 
 std::string PasswordServer::authenticate(std::string payload)
 {
+  // Parse payload
   std::string sessionID = payload.substr(0, payload.find(" "));
   payload = payload.substr(payload.find(" ") + 1, payload.length()); // Remove sessionID
   std::string username = payload.substr(0, payload.find(" "));
@@ -37,29 +45,45 @@ std::string PasswordServer::authenticate(std::string payload)
     std::string payloadRes = display("A2", false, "400 " + sessionID);
     return payloadRes;
   }
+
+  // Find username in users catalogue
   if (users.find(username) != users.end())
   {
+    // Compare hashes
     if (users[username] == md5AndEncode(password))
     {
+      // Generate cookie
       std::string cookie = generateRandom();
       cookies.push_back(cookie);
+
+      // Send payload
       std::string payloadRes = display("A2", false, sessionID + " 200 SetCookie:Session=" + cookie);
       return payloadRes;
     }
   }
+
+  // Send error payload
   std::string payloadRes = display("A2", false, sessionID + " 401");
   return payloadRes;
 }
 
 std::string PasswordServer::transaction(std::string payload)
 {
+  // Parse payload
   std::string sessionID = payload.substr(0, payload.find(" "));
-  std::string cookie = payload.substr(payload.find("=") + 1, payload.length()); // Extract cookie
+
+  // Extract cookie
+  std::string cookie = payload.substr(payload.find("=") + 1, payload.length());
+
+  // Find cookie
   if (std::find(cookies.begin(), cookies.end(), cookie) != cookies.end())
   {
+    // Send success payload
     std::string payloadRes = display("T2", false, sessionID + " 200");
     return payloadRes;
   }
+  
+  // Send error payload
   std::string payloadRes = display("T2", false, sessionID + " 401");
   return payloadRes;
 }

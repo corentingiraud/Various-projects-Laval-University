@@ -1,3 +1,0 @@
-Enregistrement d'un utilisateur qui existe deja ?
-Enregistrement possible en mode non identifié ?
-Unauthorized HTTP Digest typo

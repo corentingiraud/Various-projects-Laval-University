@@ -70,15 +70,22 @@ void PasswordClient::registerToServer()
 
 void PasswordClient::authenticate()
 {
+  // Get credentials from user
   std::string payload = askUser("Veuillez entrez vos identifiants au format <username password>: ");
+
+  // Generate sessionID and send payload
   std::string sessionID = generateRandom();
   payload = display("A1", true, sessionID + " " + payload);
   std::string res = passwordServer->authenticate(payload);
-  res = res.substr(res.find(" ") + 1, res.length()); // Remove sessionID
-  std::string code = res.substr(0, res.find(" "));   // Extract code
+
+  // Remove sessionID and extract response code
+  res = res.substr(res.find(" ") + 1, res.length()); 
+  std::string code = res.substr(0, res.find(" "));
+
   if (code == "200")
   {
-    cookie = res.substr(res.find("=") + 1, res.length()); // Extract code and save it
+    // Extract code and save it
+    cookie = res.substr(res.find("=") + 1, res.length());
   }
 }
 
@@ -89,6 +96,8 @@ void PasswordClient::transaction()
     std::cout << "Aucun cookie défini. Authentifiez-vous au préalable." << std::endl;
     return;
   }
+
+  // Ask client for a command, generate sessionID and send payload
   std::string payload = askUser("Veuillez entrez la commande: ");
   std::string sessionID = generateRandom();
   payload = display("T1", true, sessionID + " " + payload + " Cookie:session=" + cookie);

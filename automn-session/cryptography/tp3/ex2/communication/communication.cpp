@@ -1,5 +1,7 @@
 #include "communication.h"
 
+// This method is called on EVERY communication between clients and servers
+// It allow user to play hacker role (MITM attack)
 std::string Communication::hackerMenu(std::string message)
 {
   std::string newMessage;
@@ -13,6 +15,7 @@ std::string Communication::hackerMenu(std::string message)
   return newMessage;
 }
 
+// This method is called on EVERY communication between clients and servers
 std::string Communication::display(std::string step, bool clientToServer, std::string message)
 {
   std::string way = "S -> C";
@@ -30,6 +33,7 @@ std::string Communication::display(std::string step, bool clientToServer, std::s
   return message;
 }
 
+// Global method to ask something to the program user
 std::string Communication::askUser(std::string question)
 {
   std::cout << question;
@@ -43,15 +47,18 @@ std::string Communication::askUser(std::string question)
   return input;
 }
 
+// Global method to generate a random number using CryptoPP lib
 std::string Communication::generateRandom()
 {
   CryptoPP::AutoSeededRandomPool rng;
+  // 16 bits => 5 digits number maximum
   CryptoPP::Integer rnd(rng, 16);
   std::stringstream ss;
   ss << rnd;
   return ss.str().substr(0, ss.str().length() - 1);
 }
 
+// Global method to hash (md5) and encode (base64) a string using CryptoPP lib
 std::string Communication::md5AndEncode(std::string text)
 {
   byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];

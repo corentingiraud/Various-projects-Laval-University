@@ -7,6 +7,7 @@ UAFServer::UAFServer()
 
 std::string UAFServer::registration(std::string payload)
 {
+  // Parse payload
   std::string payloadResponse;
   std::string username = payload.substr(0, payload.find(" "));
   std::string publicKey = payload.substr(payload.find(" ") + 1, payload.length());
@@ -16,13 +17,19 @@ std::string UAFServer::registration(std::string payload)
     payloadResponse = display("E2", false, payloadResponse);
     return payloadResponse;
   }
+
+  // Save credentials to persitence file
   std::fstream file;
   file.open(PERSISTENCE_PATH, std::ios_base::app);
   file << username << ":" << publicKey << std::endl;
   file.close();
+
+  // Update inMemory db
+  importDB();
+
+  // Send response payload
   payloadResponse = "200";
   payloadResponse = display("E2", false, payloadResponse);
-  importDB();
   return payloadResponse;
 }
 std::string UAFServer::preAuthenticate(std::string payload)
@@ -30,6 +37,8 @@ std::string UAFServer::preAuthenticate(std::string payload)
   // Compute payload
   std::string sessionID = payload.substr(0, payload.find(" "));
   currentUsername = payload.substr(payload.find(" ") + 1, payload.length());
+
+  // Generate random NS
   ns = generateRandom();
   std::string payloadResponse = display("A2", false, sessionID + " " + ns);
   return payloadResponse;
@@ -63,6 +72,7 @@ std::string UAFServer::authenticate(std::string payload)
           CryptoPP::SignatureVerificationFilter::PUT_RESULT |
               CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END));
 
+  // Send payload according to result
   if (result == true)
   {
     std::string payloadRes = display("A4", false, sessionID + " 200");
@@ -77,6 +87,8 @@ std::string UAFServer::preTransaction(std::string payload)
   // Compute payload
   std::string sessionID = payload.substr(0, payload.find(" "));
   currentCommand = payload.substr(payload.find(" ") + 1, payload.length());
+  
+  // Generate random NS
   nsTransaction = generateRandom();
   std::string payloadResponse = display("T2", false, sessionID + " " + currentCommand + " " + nsTransaction);
   return payloadResponse;
@@ -102,6 +114,7 @@ std::string UAFServer::transaction(std::string payload)
           CryptoPP::SignatureVerificationFilter::PUT_RESULT |
               CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END));
 
+  // Send payload according to result
   if (result == true)
   {
     std::string payloadRes = display("T4", false, sessionID + " 200");
